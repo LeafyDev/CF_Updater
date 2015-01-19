@@ -1,0 +1,304 @@
+﻿// This program is a private software, based on c# source code.
+// To sell or change credits of this software is forbidden,
+// except if someone approve it from CF-Update INC. team.
+//  
+// Copyrights (c) 2014 CF-Update INC. All rights reserved.
+
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Net;
+using System.Net.Security;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+
+namespace CF_Update
+{
+    internal class Program
+    {
+        private const int STD_INPUT_HANDLE = -10;
+        private const int ENABLE_QUICK_EDIT_MODE = 0x40 | 0x80;
+        public static Random rnd = new Random();
+        public static string ExtIP = string.Empty;
+        public static int choice = 0;
+        public static int errors = 0;
+        public static string EMAIL = string.Empty;
+        public static string TKN = string.Empty;
+        public static string ID = string.Empty;
+        public static string NAME = string.Empty;
+        public static string SUB = string.Empty;
+        public static bool valid = false;
+        public static readonly string path = Environment.CurrentDirectory + @"\CF-Updater.ini";
+
+        private static void Main(string[] args)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+
+            Console.Title = @"CF-Updater";
+
+            if(File.Exists(path))
+            {
+                var settings = File.ReadAllLines(path);
+                EMAIL = settings[0].Split('=')[1];
+                TKN = settings[1].Split('=')[1];
+                ID = settings[2].Split('=')[1];
+                NAME = settings[3].Split('=')[1];
+                SUB = settings[4].Split('=')[1];
+
+                if(EMAIL == string.Empty || TKN == string.Empty || ID == string.Empty || NAME == string.Empty || SUB == string.Empty)
+                {
+                    Console.WriteLine(@"Invalid settings file." + Environment.NewLine);
+                    InitSettings();
+                }
+                else
+                {
+                    Console.WriteLine(@"Loaded settings from file.");
+                    Thread.Sleep(2000);
+                }
+            }
+            else
+            {
+                InitSettings();
+            }
+
+            Console.Clear();
+
+            valid = false;
+            do
+            {
+                Console.WriteLine(@"Which IP do you want to use? Make a choice.");
+                Console.WriteLine(@"-----------------------------");
+                Console.WriteLine(@"1. Random IP");
+                Console.WriteLine(@"2. Your IP");
+                Console.WriteLine(@"3. Custom IP" + Environment.NewLine);
+                Console.WriteLine(@"0. Exit");
+                Console.WriteLine(@"-----------------------------");
+                Console.WriteLine(@"Your choice:");
+
+                var input = Console.ReadLine();
+                Int32.TryParse(input, out choice);
+                Console.WriteLine(@"-----------------------------");
+
+                switch(choice)
+                {
+                    case 1:
+                        SetRandomIP();
+                        valid = true;
+                        break;
+                    case 2:
+                        SetSelfIP();
+                        valid = true;
+                        break;
+                    case 3:
+                        SetCustomIP();
+                        valid = true;
+                        break;
+                    case 0:
+                        Environment.Exit(0);
+                        break;
+                    default:
+                        errors = errors + 1;
+                        Console.WriteLine(errors < 5 ? @"Wrong selection." : @"Seriously? ._.");
+                        Thread.Sleep(1000);
+                        Console.Clear();
+                        valid = false;
+                        break;
+                }
+            }
+            while(valid == false);
+
+            Console.WriteLine(@"-----------------------------");
+            Console.WriteLine(@"Setting " + SUB + @"." + NAME + @" to " + ExtIP);
+
+            var request = WebRequest.Create("https://www.cloudflare.com/api_json.html");
+            request.Proxy = null;
+            request.Credentials = CredentialCache.DefaultCredentials;
+            request.Method = "POST";
+
+            ServicePointManager.ServerCertificateValidationCallback += AcceptAllCertifications;
+
+            var postData = "a=rec_edit&tkn=" + TKN + "&id=" + ID + "&email=" + EMAIL + "&z=" + NAME + "&type=A&name=" + SUB + "&content=" + ExtIP
+                           + "&service_mode=0&ttl=1'";
+            var byteArray = Encoding.UTF8.GetBytes(postData);
+
+            request.ContentType = "application/x-www-form-urlencoded";
+            request.ContentLength = byteArray.Length;
+            var dataStream = request.GetRequestStream();
+            dataStream.Write(byteArray, 0, byteArray.Length);
+            dataStream.Close();
+            var response = request.GetResponse();
+            Console.WriteLine(@"Server response: " + ((HttpWebResponse) response).StatusDescription);
+            dataStream = response.GetResponseStream();
+            var reader = new StreamReader(dataStream);
+            reader.Close();
+            dataStream.Close();
+            response.Close();
+
+            if(choice == 2 || choice == 3)
+            {
+                Thread.Sleep(1000);
+                Console.Clear();
+                Console.WriteLine(@"-----------------------------");
+                Console.WriteLine(@"Waiting for DNS to update." + Environment.NewLine);
+                var i = 1;
+
+                Console.WriteLine(@"-- Check #" + i);
+                var host = NAME;
+                var address = Dns.GetHostEntry(host).AddressList[0];
+                Console.WriteLine(host + @" = " + address);
+                Console.WriteLine(@"Rechecking in 30 seconds.");
+
+                while(address.ToString() != ExtIP)
+                {
+                    i = i + 1;
+                    Thread.Sleep(30000);
+                    var p = new Process {StartInfo = {WindowStyle = ProcessWindowStyle.Hidden, FileName = "ipconfig", Arguments = "/flushdns"}};
+                    p.Start();
+                    Console.WriteLine(@"-- Check #" + i);
+                    address = Dns.GetHostEntry(host).AddressList[0];
+                    Console.WriteLine(host + @" = " + address);
+                }
+            }
+
+            Console.WriteLine(@"-----------------------------");
+            Console.WriteLine(@"Done! Press any key to GTFO.");
+            Console.ReadLine();
+        }
+
+        private static void InitSettings()
+        {
+            Console.WriteLine(@"Enter CloudFlare email:");
+            EMAIL = Console.ReadLine();
+            Console.WriteLine(@"Enter CloudFlare token:");
+            TKN = Console.ReadLine();
+            Console.WriteLine(@"Enter CloudFlare subdomain ID:");
+            ID = Console.ReadLine();
+            Console.WriteLine(@"Enter domain name:");
+            NAME = Console.ReadLine();
+            Console.WriteLine(@"Enter subdomain name:");
+            SUB = Console.ReadLine();
+            Console.WriteLine(@"Save these settings? (y/n)");
+            var savechoice = Console.ReadLine();
+
+            valid = false;
+            do
+            {
+                switch(savechoice)
+                {
+                    case "Y":
+                        SaveSettings();
+                        valid = true;
+                        break;
+                    case "y":
+                        SaveSettings();
+                        valid = true;
+                        break;
+                    case "n":
+                        valid = true;
+                        break;
+                    case "N":
+                        valid = true;
+                        break;
+                    default:
+                        Console.WriteLine(@"Invalid choice.");
+                        valid = false;
+                        break;
+                }
+            }
+            while(valid == false);
+            Thread.Sleep(2000);
+        }
+
+        private static void SaveSettings()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("EMAIL=" + EMAIL);
+            sb.AppendLine("TKN=" + TKN);
+            sb.AppendLine("ID=" + ID);
+            sb.AppendLine("NAME=" + NAME);
+            sb.AppendLine("SUB=" + SUB);
+
+            using(var outfile = new StreamWriter(Environment.CurrentDirectory + @"\CF-Updater.ini", true))
+            {
+                outfile.WriteAsync(sb.ToString());
+            }
+            Console.WriteLine(@"Settings saved.");
+        }
+
+        private static void SetCustomIP()
+        {
+            Console.WriteLine(@"Setting to custom IP.");
+            var valid = false;
+            do
+            {
+                Console.WriteLine(@"Enter desired IP:");
+                var response = Console.ReadLine();
+                if(Regex.IsMatch(response, @"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"))
+                {
+                    ExtIP = response;
+                    valid = true;
+                }
+                else
+                {
+                    Console.WriteLine(@"ERROR: not a valid IP.");
+                    Console.Clear();
+                }
+            }
+            while(valid != true);
+        }
+
+        private static void SetSelfIP()
+        {
+            Console.WriteLine(@"Setting to own IP.");
+            Console.WriteLine(@"Obtaining info...");
+            ExtIP = (new WebClient()).DownloadString("http://www.telize.com/ip");
+            ExtIP = (new Regex(@"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}")).Matches(ExtIP)[0].ToString();
+            Console.WriteLine(@"Found external IP: " + ExtIP);
+        }
+
+        private static void SetRandomIP()
+        {
+            Console.WriteLine(@"Setting to random IP.");
+            Console.WriteLine(@"Obtaining info...");
+            ExtIP = getRandomIp();
+            Console.WriteLine(@"Generated external IP: " + ExtIP);
+        }
+
+        public static bool AcceptAllCertifications(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        {
+            return true;
+        }
+
+        private static string getRandomIp()
+        {
+            var ExternalIP = getRandomInt() + "." + getRandomInt() + "." + getRandomInt() + "." + getRandomInt();
+            return ExternalIP;
+        }
+
+        protected static int getRandomInt()
+        {
+            return rnd.Next(1, 254);
+        }
+
+        [DllImport("kernel32.dll")]
+        private static extern bool SetConsoleMode(IntPtr hConsoleHandle, int mode);
+
+        [DllImport("kernel32.dll")]
+        private static extern bool GetConsoleMode(IntPtr hConsoleHandle, out int mode);
+
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr GetStdHandle(int handle);
+
+        public static void EnableQuickEditMode()
+        {
+            int mode;
+            var handle = GetStdHandle(STD_INPUT_HANDLE);
+            GetConsoleMode(handle, out mode);
+            mode |= ENABLE_QUICK_EDIT_MODE;
+            SetConsoleMode(handle, mode);
+        }
+    }
+}
