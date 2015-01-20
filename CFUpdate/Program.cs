@@ -1,21 +1,21 @@
 ﻿// This program is a private software, based on c# source code.
 // To sell or change credits of this software is forbidden,
-// except if someone approve it from CF-Update INC. team.
+// except if someone approve it from CFUpdate INC. team.
 //  
-// Copyrights (c) 2014 CF-Update INC. All rights reserved.
+// Copyrights (c) 2014 CFUpdate INC. All rights reserved.
 
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Net.Security;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace CF_Update
+using CFUpdate.API;
+
+namespace CFUpdate
 {
     internal class Program
     {
@@ -25,9 +25,7 @@ namespace CF_Update
         public static string ExtIP = string.Empty;
         public static int choice = 0;
         public static int errors = 0;
-        public static string EMAIL = string.Empty;
-        public static string TKN = string.Empty;
-        public static string ID = string.Empty;
+        public static CFConnectionInfo ConnectionInfo = new CFConnectionInfo();
         public static string NAME = string.Empty;
         public static string SUB = string.Empty;
         public static bool valid = false;
@@ -42,13 +40,14 @@ namespace CF_Update
             if(File.Exists(path))
             {
                 var settings = File.ReadAllLines(path);
-                EMAIL = settings[0].Split('=')[1];
-                TKN = settings[1].Split('=')[1];
-                ID = settings[2].Split('=')[1];
+                ConnectionInfo.Email = settings[0].Split('=')[1];
+                ConnectionInfo.Token = settings[1].Split('=')[1];
+                ConnectionInfo.ID = settings[2].Split('=')[1];
                 NAME = settings[3].Split('=')[1];
                 SUB = settings[4].Split('=')[1];
 
-                if(EMAIL == string.Empty || TKN == string.Empty || ID == string.Empty || NAME == string.Empty || SUB == string.Empty)
+                if(string.IsNullOrEmpty(ConnectionInfo.Email) || string.IsNullOrEmpty(ConnectionInfo.ID) || string.IsNullOrEmpty(ConnectionInfo.Token)
+                   || string.IsNullOrEmpty(NAME) || string.IsNullOrEmpty(SUB))
                 {
                     Console.WriteLine(@"Invalid settings file." + Environment.NewLine);
                     InitSettings();
@@ -113,29 +112,8 @@ namespace CF_Update
             Console.WriteLine(@"-----------------------------");
             Console.WriteLine(@"Setting " + SUB + @"." + NAME + @" to " + ExtIP);
 
-            var request = WebRequest.Create("https://www.cloudflare.com/api_json.html");
-            request.Proxy = null;
-            request.Credentials = CredentialCache.DefaultCredentials;
-            request.Method = "POST";
-
-            ServicePointManager.ServerCertificateValidationCallback += AcceptAllCertifications;
-
-            var postData = "a=rec_edit&tkn=" + TKN + "&id=" + ID + "&email=" + EMAIL + "&z=" + NAME + "&type=A&name=" + SUB + "&content=" + ExtIP
-                           + "&service_mode=0&ttl=1'";
-            var byteArray = Encoding.UTF8.GetBytes(postData);
-
-            request.ContentType = "application/x-www-form-urlencoded";
-            request.ContentLength = byteArray.Length;
-            var dataStream = request.GetRequestStream();
-            dataStream.Write(byteArray, 0, byteArray.Length);
-            dataStream.Close();
-            var response = request.GetResponse();
-            Console.WriteLine(@"Server response: " + ((HttpWebResponse) response).StatusDescription);
-            dataStream = response.GetResponseStream();
-            var reader = new StreamReader(dataStream);
-            reader.Close();
-            dataStream.Close();
-            response.Close();
+            var connection = CFConnection.CreateConnection(ConnectionInfo);
+            connection.UpdateDomainRecord(NAME, SUB, ExtIP);
 
             if(choice == 2 || choice == 3)
             {
@@ -171,11 +149,11 @@ namespace CF_Update
         private static void InitSettings()
         {
             Console.WriteLine(@"Enter CloudFlare email:");
-            EMAIL = Console.ReadLine();
+            ConnectionInfo.Email = Console.ReadLine();
             Console.WriteLine(@"Enter CloudFlare token:");
-            TKN = Console.ReadLine();
+            ConnectionInfo.Token = Console.ReadLine();
             Console.WriteLine(@"Enter CloudFlare subdomain ID:");
-            ID = Console.ReadLine();
+            ConnectionInfo.ID = Console.ReadLine();
             Console.WriteLine(@"Enter domain name:");
             NAME = Console.ReadLine();
             Console.WriteLine(@"Enter subdomain name:");
@@ -215,9 +193,9 @@ namespace CF_Update
         private static void SaveSettings()
         {
             var sb = new StringBuilder();
-            sb.AppendLine("EMAIL=" + EMAIL);
-            sb.AppendLine("TKN=" + TKN);
-            sb.AppendLine("ID=" + ID);
+            sb.AppendLine("EMAIL=" + ConnectionInfo.Email);
+            sb.AppendLine("TKN=" + ConnectionInfo.Token);
+            sb.AppendLine("ID=" + ConnectionInfo.ID);
             sb.AppendLine("NAME=" + NAME);
             sb.AppendLine("SUB=" + SUB);
 
@@ -231,7 +209,7 @@ namespace CF_Update
         private static void SetCustomIP()
         {
             Console.WriteLine(@"Setting to custom IP.");
-            var valid = false;
+            valid = false;
             do
             {
                 Console.WriteLine(@"Enter desired IP:");
@@ -265,11 +243,6 @@ namespace CF_Update
             Console.WriteLine(@"Obtaining info...");
             ExtIP = getRandomIp();
             Console.WriteLine(@"Generated external IP: " + ExtIP);
-        }
-
-        public static bool AcceptAllCertifications(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-        {
-            return true;
         }
 
         private static string getRandomIp()

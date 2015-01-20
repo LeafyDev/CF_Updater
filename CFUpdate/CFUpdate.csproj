@@ -7,8 +7,8 @@
     <ProjectGuid>{2DF2C22E-DB30-4DCA-B659-EC476AA726F9}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>CF_Update</RootNamespace>
-    <AssemblyName>CF-Update</AssemblyName>
+    <RootNamespace>CFUpdate</RootNamespace>
+    <AssemblyName>CFUpdate</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -63,6 +63,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="cloudflare.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CFUpdate.API\CFUpdate.API.csproj">
+      <Project>{727425f5-a9aa-4a66-b0aa-e249d40b3f06}</Project>
+      <Name>CFUpdate.API</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

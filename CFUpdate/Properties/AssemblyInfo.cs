@@ -1,8 +1,8 @@
 ﻿// This program is a private software, based on c# source code.
 // To sell or change credits of this software is forbidden,
-// except if someone approve it from CF-Update INC. team.
+// except if someone approve it from CFUpdate INC. team.
 //  
-// Copyrights (c) 2014 CF-Update INC. All rights reserved.
+// Copyrights (c) 2014 CFUpdate INC. All rights reserved.
 
 using System.Reflection;
 using System.Runtime.InteropServices;

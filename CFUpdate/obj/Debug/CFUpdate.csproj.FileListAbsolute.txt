@@ -1,0 +1,10 @@
+D:\Documents\Visual Studio 2013\Projects\CF_Updater-master\CFUpdate\bin\Debug\CFUpdate.exe.config
+D:\Documents\Visual Studio 2013\Projects\CF_Updater-master\CFUpdate\bin\Debug\CFUpdate.exe
+D:\Documents\Visual Studio 2013\Projects\CF_Updater-master\CFUpdate\bin\Debug\CFUpdate.pdb
+D:\Documents\Visual Studio 2013\Projects\CF_Updater-master\CFUpdate\bin\Debug\CFUpdate.API.dll
+D:\Documents\Visual Studio 2013\Projects\CF_Updater-master\CFUpdate\bin\Debug\CFUpdate.API.pdb
+D:\Documents\Visual Studio 2013\Projects\CF_Updater-master\CFUpdate\obj\Debug\CFUpdate.csprojResolveAssemblyReference.cache
+D:\Documents\Visual Studio 2013\Projects\CF_Updater-master\CFUpdate\obj\Debug\CFUpdate.Properties.Resources.resources
+D:\Documents\Visual Studio 2013\Projects\CF_Updater-master\CFUpdate\obj\Debug\CFUpdate.csproj.GenerateResource.Cache
+D:\Documents\Visual Studio 2013\Projects\CF_Updater-master\CFUpdate\obj\Debug\CFUpdate.exe
+D:\Documents\Visual Studio 2013\Projects\CF_Updater-master\CFUpdate\obj\Debug\CFUpdate.pdb
