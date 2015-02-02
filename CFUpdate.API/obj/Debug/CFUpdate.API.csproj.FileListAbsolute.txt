@@ -3,3 +3,8 @@ D:\Documents\Visual Studio 2013\Projects\CF_Updater-master\CFUpdate.API\bin\Debu
 D:\Documents\Visual Studio 2013\Projects\CF_Updater-master\CFUpdate.API\obj\Debug\CFUpdate.API.csprojResolveAssemblyReference.cache
 D:\Documents\Visual Studio 2013\Projects\CF_Updater-master\CFUpdate.API\obj\Debug\CFUpdate.API.dll
 D:\Documents\Visual Studio 2013\Projects\CF_Updater-master\CFUpdate.API\obj\Debug\CFUpdate.API.pdb
+D:\Documents\Visual Studio 2013\Projects\CF-Update\CFUpdate.API\bin\Debug\CFUpdate.API.dll
+D:\Documents\Visual Studio 2013\Projects\CF-Update\CFUpdate.API\bin\Debug\CFUpdate.API.pdb
+D:\Documents\Visual Studio 2013\Projects\CF-Update\CFUpdate.API\obj\Debug\CFUpdate.API.csprojResolveAssemblyReference.cache
+D:\Documents\Visual Studio 2013\Projects\CF-Update\CFUpdate.API\obj\Debug\CFUpdate.API.dll
+D:\Documents\Visual Studio 2013\Projects\CF-Update\CFUpdate.API\obj\Debug\CFUpdate.API.pdb

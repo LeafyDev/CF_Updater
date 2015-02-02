@@ -143,7 +143,7 @@ namespace CFUpdate
 
             Console.WriteLine(@"-----------------------------");
             Console.WriteLine(@"Done! Press any key to GTFO.");
-            Console.ReadLine();
+            Console.ReadKey();
         }
 
         private static void InitSettings()
